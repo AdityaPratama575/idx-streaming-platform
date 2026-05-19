@@ -1,0 +1,3 @@
+python-dotenv>=1.0.0
+yfinance>=0.2.30
+kafka-python>=2.0.2

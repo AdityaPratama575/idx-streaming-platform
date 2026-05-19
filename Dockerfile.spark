@@ -1,0 +1,41 @@
+# Dockerfile.spark
+# Image berbasis official Apache Spark image untuk menjalankan spark_processor.py.
+# Bitnami/spark sudah deprecated (image tidak tersedia), diganti dengan official release.
+FROM apache/spark:3.4.4
+
+WORKDIR /app
+
+# Semua instalasi sebagai root — pip butuh akses ke /home/spark/.cache
+USER root
+RUN apt-get update -qq && apt-get install -y -qq curl && apt-get clean
+
+# Install Python dependencies tambahan yang tidak bundled
+COPY requirements-spark.txt .
+RUN pip install --no-cache-dir -r requirements-spark.txt
+
+# Download Spark connectors saat build agar startup tidak bergantung ketersediaan Maven Central
+# Dibanding --packages (download runtime), ini lebih cepat dan reliable
+# SPARK_HOME = /opt/spark
+RUN curl -fsSL -o /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.4.4.jar \
+    https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.4.4/spark-sql-kafka-0-10_2.12-3.4.4.jar \
+    && curl -fsSL -o /opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.4.4.jar \
+    https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.4.4/spark-token-provider-kafka-0-10_2.12-3.4.4.jar \
+    && curl -fsSL -o /opt/spark/jars/kafka-clients-3.4.0.jar \
+    https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.4.0/kafka-clients-3.4.0.jar \
+    && curl -fsSL -o /opt/spark/jars/commons-pool2-2.11.1.jar \
+    https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.11.1/commons-pool2-2.11.1.jar \
+    && curl -fsSL -o /opt/spark/jars/gcs-connector-hadoop3-2.2.11-shaded.jar \
+    https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop3-2.2.11/gcs-connector-hadoop3-2.2.11-shaded.jar \
+    && curl -fsSL -o /opt/spark/jars/spark-bigquery-with-dependencies_2.12-0.34.0.jar \
+    https://repo1.maven.org/maven2/com/google/cloud/spark/spark-bigquery-with-dependencies_2.12/0.34.0/spark-bigquery-with-dependencies_2.12-0.34.0.jar
+
+# Copy kode Spark processor
+COPY spark_processor.py .
+
+# Buat checkpoint directory agar bisa ditulis oleh spark user
+RUN mkdir -p /tmp/spark-checkpoints && chown spark:spark /tmp/spark-checkpoints
+
+# Kembali ke user default spark untuk runtime security
+USER spark
+
+ENV PYTHONUNBUFFERED=1

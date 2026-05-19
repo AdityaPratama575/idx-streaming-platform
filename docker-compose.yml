@@ -1,0 +1,159 @@
+# docker-compose.yml
+# IDX-Stream: Infrastruktur pipeline real-time saham IDX.
+# Seluruh komunikasi antar-service menggunakan internal Docker network (BAN 3 & BAN 4).
+
+networks:
+  idx-network:
+    name: idx-network
+    driver: bridge
+
+volumes:
+  kafka_data:
+    name: kafka_data
+    # Data Kafka tetap bertahan walau container restart
+  spark_checkpoints:
+    name: spark_checkpoints
+    # State Spark Structured Streaming agar resumable dari offset terakhir
+
+services:
+
+  # ==============================================
+  # Kafka Broker — KRaft mode (BAN 2: NO Zookeeper)
+  # ==============================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.5
+    container_name: idx-kafka
+    networks:
+      - idx-network
+    ports:
+      - "9092:9092"   # External (untuk producer dari host)
+      - "29092:29092" # Internal (untuk Spark di Docker network)
+    environment:
+      # Cluster ID untuk KRaft mode (wajib, tanpa prefix KAFKA_)
+      CLUSTER_ID: "c7A_fYWjS02EqEFUWtTqHw"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # Tiga listener: internal (29092), external (9092), controller (9093)
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # Single node — replication factor 1 cukup
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      # Auto-create topic untuk development agar producer langsung jalan
+      # WARNING: Ganti ke 'false' di production, dan buat topic manual:
+      #   docker exec idx-kafka kafka-topics --bootstrap-server localhost:29092 \
+      #     --create --topic idx_sector_ticks --partitions 3 --replication-factor 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    mem_limit: 2g
+    cpus: 1.0
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:29092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==============================================
+  # Spark Master — Cluster manager
+  # ==============================================
+  spark-master:
+    image: apache/spark:3.4.4
+    container_name: idx-spark-master
+    networks:
+      - idx-network
+    ports:
+      - "8080:8080"  # Web UI
+      - "7077:7077"  # Cluster port
+    environment:
+      SPARK_MASTER_PORT: 7077
+      SPARK_MASTER_WEBUI_PORT: 8080
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    restart: on-failure
+    mem_limit: 1g
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ==============================================
+  # Spark Worker — Eksekutor yang terhubung ke master
+  # ==============================================
+  spark-worker:
+    image: apache/spark:3.4.4
+    container_name: idx-spark-worker
+    networks:
+      - idx-network
+    ports:
+      - "8081:8081"  # Web UI worker
+    environment:
+      SPARK_WORKER_WEBUI_PORT: 8081
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    restart: on-failure
+    mem_limit: 2g
+    cpus: 1.0
+    volumes:
+      - ./gcp-service-account.json:/app/gcp-service-account.json:ro
+    depends_on:
+      spark-master:
+        condition: service_healthy
+
+  # ==============================================
+  # Producer — yfinance → Kafka (Issue 03)
+  # ==============================================
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    container_name: idx-producer
+    networks:
+      - idx-network
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: on-failure
+    mem_limit: 512m
+    cpus: 0.5
+
+  # ==============================================
+  # Spark Processor — Kafka → BigQuery (Issue 04)
+  # ==============================================
+  spark-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: idx-spark-processor
+    networks:
+      - idx-network
+    env_file:
+      - .env
+    volumes:
+      # Bind mount service account agar path GOOGLE_APPLICATION_CREDENTIALS bisa diakses
+      - ./gcp-service-account.json:/app/gcp-service-account.json:ro
+      # Named volume untuk checkpoint Spark — state streaming tetap bertahan walau container restart
+      - spark_checkpoints:/tmp/spark-checkpoints
+    depends_on:
+      kafka:
+        condition: service_healthy
+      spark-master:
+        condition: service_healthy
+    restart: on-failure
+    mem_limit: 1g
+    cpus: 1.0
+    command: >
+      /opt/spark/bin/spark-submit
+      --master spark://spark-master:7077
+      /app/spark_processor.py

@@ -1,0 +1,48 @@
+# === Secrets & Configurations ===
+.env
+.env.local
+.env.*.local
+# Mengunci file kunci GCP agar tidak terendus bot scanner di GitHub
+gcp-service-account.json
+*.pem
+*.key
+
+# === Python Environment ===
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.python-version
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# === Data & Local Storage ===
+# Jangan mengunggah data mentah atau log transaksi ke GitHub
+*.log
+logs/
+data/
+temp/
+checkpoints/
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Spark & IDE Specifics ===
+.vscode/
+.idea/
+.project
+.settings/
+# Folder checkpoint streaming lokal
+spark-checkpoints/
+
+# === Compressed/Archive ===
+*.tar.gz
+*.zip
+
+# === OS Specifics ===
+.DS_Store
+Thumbs.db

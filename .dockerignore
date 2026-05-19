@@ -1,0 +1,39 @@
+# Secrets & Config — safeguard agar tidak bocor ke Docker image layer
+.env
+gcp-service-account.json
+*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+env/
+venv/
+
+# Data & Logs
+*.log
+data/
+temp/
+checkpoints/
+spark-checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs & Issues — tidak dibutuhkan di runtime image
+docs/
+issue/
+README.md
+
+# Issue files — sudah dikerjakan, tidak perlu masuk image
+issue/

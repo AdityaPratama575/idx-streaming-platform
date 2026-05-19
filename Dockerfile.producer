@@ -1,0 +1,17 @@
+# Dockerfile.producer
+# Image ringan untuk Python producer yang fetch yfinance → kirim ke Kafka.
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install dependencies terlebih dahulu agar layer cache bisa dipakai ulang
+COPY requirements-producer.txt .
+RUN pip install --no-cache-dir -r requirements-producer.txt
+
+# Copy kode producer + data ticker
+COPY producer.py .
+COPY top5_saham_ihsg_by_sector_market_cap.py .
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "producer.py"]

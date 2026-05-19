@@ -1,0 +1,80 @@
+top5_saham_ihsg_by_sector_market_cap = {
+    "Energy": [
+        "BYAN.JK",
+        "DSSA.JK",
+        "CUAN.JK",
+        "AADI.JK",
+        "BUMI.JK",
+    ],
+    "Basic Materials": [
+        "TPIA.JK",
+        "AMMN.JK",
+        "BRPT.JK",
+        "EMAS.JK",
+        "BRMS.JK",
+    ],
+    "Industrials": [
+        "ASII.JK",
+        "IMPC.JK",
+        "UNTR.JK",
+        "VKTR.JK",
+        "BNBR.JK",
+    ],
+    "Consumer Non-Cyclicals": [
+        "HMSP.JK",
+        "ICBP.JK",
+        "CPIN.JK",
+        "INDF.JK",
+        "UNVR.JK",
+    ],
+    "Consumer Cyclicals": [
+        "BELI.JK",
+        "EMTK.JK",
+        "MSIN.JK",
+        "FILM.JK",
+        "MDIY.JK",
+    ],
+    "Healthcare": [
+        "SRAJ.JK",
+        "KLBF.JK",
+        "SILO.JK",
+        "MIKA.JK",
+        "SOHO.JK",
+    ],
+    "Financials": [
+        "BBCA.JK",
+        "BBRI.JK",
+        "BMRI.JK",
+        "BBNI.JK",
+        "DNET.JK",
+    ],
+    "Properties & Real Estate": [
+        "PANI.JK",
+        "MPRO.JK",
+        "CBDK.JK",
+        "RISE.JK",
+        "BUVA.JK",
+    ],
+    "Technology": [
+        "DCII.JK",
+        "GOTO.JK",
+        "MLPT.JK",
+        "BUKA.JK",
+        "WIFI.JK",
+    ],
+    "Infrastructures": [
+        "BREN.JK",
+        "TLKM.JK",
+        "CDIA.JK",
+        "MORA.JK",
+        "ISAT.JK",
+    ],
+    "Transportation & Logistic": [
+        "TCPI.JK",
+        "GIAA.JK",
+        "ALII.JK",
+        "ELPI.JK",
+        "SHIP.JK",
+    ]
+    
+}
