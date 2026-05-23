@@ -126,10 +126,13 @@ for row in client.query('SELECT COUNT(*) as cnt FROM \`idx-analytics-platform.id
 
 ### 2.5 Akses Web UI
 
-| UI | URL |
-|---|---|
-| Spark Master | http://localhost:8080 |
-| Spark Worker | http://localhost:8081 |
+| UI | URL | Login |
+|---|---|---|
+| Spark Master | http://localhost:8080 | — |
+| Spark Worker | http://localhost:8081 | — |
+| Airflow | http://localhost:8082 | admin / admin |
+| Grafana | http://localhost:3000 | admin / admin |
+| Prometheus | http://localhost:9090 | — |
 
 ---
 

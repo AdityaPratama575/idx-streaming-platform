@@ -52,6 +52,9 @@ docker compose up --build
 |---|---|
 | http://localhost:8080 | Spark Master UI |
 | http://localhost:8081 | Spark Worker UI |
+| http://localhost:8082 | Airflow Webserver (admin/admin) |
+| http://localhost:3000 | Grafana Dashboard (admin/admin) |
+| http://localhost:9090 | Prometheus UI |
 | `docker logs -f idx-producer` | Log producer real-time |
 | `docker logs -f idx-spark-processor` | Log Spark streaming |
 | `docker exec idx-kafka kafka-topics --bootstrap-server localhost:29092 --list` | Daftar Kafka topics |

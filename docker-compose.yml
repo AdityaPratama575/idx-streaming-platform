@@ -10,10 +10,14 @@ networks:
 volumes:
   kafka_data:
     name: kafka_data
-    # Data Kafka tetap bertahan walau container restart
   spark_checkpoints:
     name: spark_checkpoints
-    # State Spark Structured Streaming agar resumable dari offset terakhir
+  prometheus_data:
+    name: prometheus_data
+  grafana_data:
+    name: grafana_data
+  airflow_data:
+    name: airflow_data
 
 services:
 
@@ -157,3 +161,71 @@ services:
       /opt/spark/bin/spark-submit
       --master spark://spark-master:7077
       /app/spark_processor.py
+
+  # ==============================================
+  # Airflow — Orchestrator (Issue #15)
+  # ==============================================
+  airflow:
+    image: apache/airflow:2.10.0
+    container_name: idx-airflow
+    networks:
+      - idx-network
+    ports:
+      - "8082:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      _AIRFLOW_DB_UPGRADE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - airflow_data:/opt/airflow
+    command: standalone
+    restart: on-failure
+    mem_limit: 2g
+    cpus: 1.0
+
+  # ==============================================
+  # Prometheus — Metrics Collection (Issue #13)
+  # ==============================================
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: idx-prometheus
+    networks:
+      - idx-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    restart: on-failure
+    mem_limit: 512m
+    cpus: 0.5
+
+  # ==============================================
+  # Grafana — Dashboard Visualization (Issue #13)
+  # ==============================================
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: idx-grafana
+    networks:
+      - idx-network
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    restart: on-failure
+    mem_limit: 256m
+    cpus: 0.25
