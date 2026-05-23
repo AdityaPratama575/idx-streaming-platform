@@ -2,14 +2,13 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 import yfinance as yf
 from dotenv import load_dotenv
 from kafka import KafkaProducer
 
-# Load konfigurasi dari .env — semua path/host dibaca dari sini (BAN 1 compliance)
 load_dotenv()
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
@@ -26,21 +25,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+WIB = timezone(timedelta(hours=7))
+_market_open = 9 * 60
+_market_close = 15 * 60
+
+_latest_ts_per_ticker: dict[str, str] = {}
+
 
 def init_kafka_producer():
     created = False
     producer = None
-    # Retry koneksi ke Kafka sampai berhasil, karena Kafka mungkin belum siap saat container start
     while not created:
         try:
             producer = KafkaProducer(
                 bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
                 value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-                # Idempotent producer menjamin exactly-once delivery meski ada retry
-                # enable_idempotence=True meng-override acks, retries, dan retry_backoff_ms
                 enable_idempotence=True,
             )
-            # Verifikasi koneksi dengan bootstrap_connected()
             if producer.bootstrap_connected():
                 created = True
                 logger.info("Kafka producer connected to %s", KAFKA_BOOTSTRAP_SERVERS)
@@ -50,12 +51,21 @@ def init_kafka_producer():
     return producer
 
 
+def _is_market_open():
+    now = datetime.now(WIB)
+    current_minutes = now.hour * 60 + now.minute
+    return now.weekday() < 5 and _market_open <= current_minutes < _market_close
+
+
+def _get_sleep_interval():
+    return FETCH_INTERVAL_SECONDS if _is_market_open() else 3600
+
+
 def _format_ts(ts):
     if hasattr(ts, "tz_localize") and hasattr(ts, "tzinfo") and ts.tzinfo is None:
-        ts = ts.tz_localize("Asia/Jakarta").tz_convert("UTC")
+        ts = ts.tz_localize("Asia/Jakarta")
     if hasattr(ts, "isoformat"):
         s = ts.isoformat()
-        # Hapus microseconds agar format konsisten untuk Spark
         if "." in s:
             s = s.split(".")[0] + s[s.index("+"):]
         return s
@@ -66,10 +76,8 @@ def build_payload(ticker, sector, row):
     return {
         "ticker": ticker,
         "sector": sector,
-        # Timestamp dari data yfinance — dinormalisasi ke UTC agar konsisten
         "timestamp": _format_ts(row.name),
-        # Timestamp kapan data di-fetch oleh sistem ini
-        "fetch_ts": _format_ts(datetime.now(timezone.utc)),
+        "fetch_ts": _format_ts(datetime.now(WIB)),
         "open": float(row["Open"]) if pd.notna(row["Open"]) else None,
         "high": float(row["High"]) if pd.notna(row["High"]) else None,
         "low": float(row["Low"]) if pd.notna(row["Low"]) else None,
@@ -85,44 +93,55 @@ def fetch_and_publish(producer):
         for ticker in tickers:
             for attempt in range(max_retries):
                 try:
-                    # Ambil data intraday 1 hari dengan interval 1 menit
                     data = yf.Ticker(ticker).history(period="1d", interval="1m")
 
                     if data.empty:
                         logger.warning("No data for %s (%s) — skipping", ticker, sector)
                         break
 
-                    # Kirim setiap baris data sebagai satu message Kafka
-                    for _, row in data.iterrows():
-                        payload = build_payload(ticker, sector, row)
-                        producer.send(KAFKA_TOPIC, value=payload)
-                        total_sent += 1
+                    sent = 0
+                    skipped = 0
+                    latest = _latest_ts_per_ticker.get(ticker, "")
 
-                    logger.info("%s (%s): %d ticks sent", ticker, sector, len(data))
+                    for _, row in data.iterrows():
+                        ts = _format_ts(row.name)
+                        if ts <= latest:
+                            skipped += 1
+                            continue
+                        payload = build_payload(ticker, sector, row)
+                        producer.send(
+                            KAFKA_TOPIC,
+                            value=payload,
+                            headers=[
+                                ("schema_name", b"stock_tick"),
+                                ("schema_version", b"1"),
+                            ],
+                        )
+                        sent += 1
+                        if ts > latest:
+                            latest = ts
+
+                    if sent > 0:
+                        _latest_ts_per_ticker[ticker] = latest
+                        total_sent += sent
+                        logger.info("%s (%s): sent=%d skipped=%d", ticker, sector, sent, skipped)
+                    else:
+                        logger.info("%s (%s): no new candles (skipped=%d)", ticker, sector, skipped)
                     break
 
                 except Exception as e:
                     if attempt < max_retries - 1:
                         wait = 5 * (attempt + 1)
-                        logger.warning(
-                            "Retry %d/%d for %s (%s) in %ds: %s",
-                            attempt + 1, max_retries, ticker, sector, wait, e,
-                        )
+                        logger.warning("Retry %d/%d for %s (%s) in %ds: %s", attempt + 1, max_retries, ticker, sector, wait, e)
                         time.sleep(wait)
                     else:
-                        # Retries habis — skip ticker, pipeline tetap jalan
-                        logger.warning(
-                            "Failed to fetch %s (%s) after %d retries: %s",
-                            ticker, sector, max_retries, e,
-                        )
+                        logger.warning("Failed to fetch %s (%s) after %d retries: %s", ticker, sector, max_retries, e)
 
-            # Delay antar ticker untuk menghindari rate limit Yahoo Finance
             time.sleep(YFINANCE_DELAY_SECONDS)
 
-        # Flush per sektor agar data tidak menumpuk di buffer dan latency terkontrol
         producer.flush()
 
-    logger.info("Batch complete: %d total messages sent", total_sent)
+    logger.info("Batch complete: %d new messages sent across %d tickers with data", total_sent, len(_latest_ts_per_ticker))
 
 
 def main():
@@ -132,10 +151,11 @@ def main():
     while True:
         try:
             fetch_and_publish(producer)
-            logger.info("Sleeping %d seconds before next fetch cycle...", FETCH_INTERVAL_SECONDS)
-            time.sleep(FETCH_INTERVAL_SECONDS)
+            interval = _get_sleep_interval()
+            status = "market hours" if _is_market_open() else "off-hours"
+            logger.info("Sleeping %d seconds before next fetch cycle (%s)...", interval, status)
+            time.sleep(interval)
         except Exception as e:
-            # Kafka connection loss — reconnect dan langsung loop lagi (tanpa sleep tambahan)
             logger.error("Producer error: %s. Reconnecting...", e)
             time.sleep(5)
             producer = init_kafka_producer()

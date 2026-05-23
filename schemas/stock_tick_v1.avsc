@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "StockTick",
+  "namespace": "com.idx.stream",
+  "version": "1",
+  "fields": [
+    {"name": "ticker",   "type": "string"},
+    {"name": "sector",   "type": "string"},
+    {"name": "timestamp","type": {"type": "string", "logicalType": "iso8601"}},
+    {"name": "fetch_ts", "type": {"type": "string", "logicalType": "iso8601"}},
+    {"name": "open",     "type": ["null", "double"], "default": null},
+    {"name": "high",     "type": ["null", "double"], "default": null},
+    {"name": "low",      "type": ["null", "double"], "default": null},
+    {"name": "close",    "type": ["null", "double"], "default": null},
+    {"name": "volume",   "type": ["null", "long"],   "default": null}
+  ]
+}
