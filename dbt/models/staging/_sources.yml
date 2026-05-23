@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: idx_stream
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: idx_stock_data
+    tables:
+      - name: top_sector_ticks
+        description: "Raw intraday stock ticks from IDX real-time pipeline"
+        columns:
+          - name: ticker
+            description: "Stock ticker code (e.g. BYAN.JK)"
+          - name: sector
+            description: "IDX sector classification"
+          - name: timestamp
+            description: "Candle timestamp (WIB)"
+          - name: fetch_ts
+            description: "Pipeline fetch timestamp (WIB)"
+          - name: open
+            description: "Opening price"
+          - name: high
+            description: "Highest price"
+          - name: low
+            description: "Lowest price"
+          - name: close
+            description: "Closing price"
+          - name: volume
+            description: "Transaction volume"

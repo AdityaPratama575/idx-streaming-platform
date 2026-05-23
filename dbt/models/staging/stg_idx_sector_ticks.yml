@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_idx_sector_ticks
+    description: "Staging layer for IDX stock ticks. Renames columns, casts types, filters data < 90 days."
+    columns:
+      - name: ticker
+        tests:
+          - not_null
+      - name: sector
+        tests:
+          - not_null
+      - name: timestamp
+        tests:
+          - not_null
+      - name: close
+        tests:
+          - not_null
+      - name: volume
+        tests:
+          - not_null
+      - name: date_id
+        tests:
+          - not_null

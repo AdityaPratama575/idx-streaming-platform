@@ -1,0 +1,36 @@
+name: idx_stream
+version: "1.0.0"
+config-version: 2
+
+profile: idx_stream
+
+model-paths:
+  - models
+analysis-paths:
+  - analyses
+seed-paths:
+  - seeds
+macro-paths:
+  - macros
+snapshot-paths:
+  - snapshots
+
+clean-targets:
+  - target
+  - dbt_packages
+
+models:
+  idx_stream:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  idx_stream:
+    schema: seeds
