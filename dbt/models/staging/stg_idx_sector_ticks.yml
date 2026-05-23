@@ -22,3 +22,31 @@ models:
       - name: date_id
         tests:
           - not_null
+      - name: ticker
+        tests:
+          - unique:
+              # Composite unique with timestamp (soft dependency — dbt_utils.unique_combination_of_columns)
+              column_name: "ticker || '-' || CAST(timestamp AS STRING)"
+      - name: sector
+        tests:
+          - accepted_values:
+              values:
+                - Energy
+                - Basic Materials
+                - Consumer Cyclicals
+                - Consumer Non-Cyclicals
+                - Healthcare
+                - Properties & Real Estate
+                - Technology
+                - Infrastructures
+                - Transportation & Logistic
+                - Financials
+                - Industrial
+      - name: close
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "close > 0"
+      - name: volume
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "volume >= 0"
