@@ -1,0 +1,11 @@
+[
+  {"name": "ticker", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "sector", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "fetch_ts", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "open", "type": "FLOAT", "mode": "NULLABLE"},
+  {"name": "high", "type": "FLOAT", "mode": "NULLABLE"},
+  {"name": "low", "type": "FLOAT", "mode": "NULLABLE"},
+  {"name": "close", "type": "FLOAT", "mode": "NULLABLE"},
+  {"name": "volume", "type": "INTEGER", "mode": "NULLABLE"}
+]

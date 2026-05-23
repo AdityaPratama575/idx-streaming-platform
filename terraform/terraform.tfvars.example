@@ -1,0 +1,4 @@
+project_id     = "your-gcp-project-id"
+region         = "asia-southeast2"
+environment    = "dev"
+bq_dataset_name = "idx_stock_data"
