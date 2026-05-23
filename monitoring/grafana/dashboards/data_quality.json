@@ -1,0 +1,40 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "Data Quality",
+  "uid": "data-quality",
+  "panels": [
+    {
+      "title": "Ticker Coverage",
+      "type": "singlestat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "idx_tickers_succeeded"}],
+      "format": "none"
+    },
+    {
+      "title": "Failed Tickers",
+      "type": "singlestat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "idx_tickers_failed"}],
+      "format": "none"
+    },
+    {
+      "title": "Kafka Bytes In",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "rate(kafka_broker_BytesInPerSec[5m])", "legendFormat": "bytes in"},
+        {"expr": "rate(kafka_broker_BytesOutPerSec[5m])", "legendFormat": "bytes out"}
+      ]
+    },
+    {
+      "title": "Under Replicated Partitions",
+      "type": "singlestat",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 3},
+      "targets": [{"expr": "kafka_UnderReplicatedPartitions"}],
+      "format": "none"
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1
+}

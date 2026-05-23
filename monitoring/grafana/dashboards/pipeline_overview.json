@@ -1,0 +1,57 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "Pipeline Overview",
+  "uid": "pipeline-overview",
+  "panels": [
+    {
+      "title": "Messages Sent to Kafka",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {
+          "expr": "rate(idx_messages_sent_total[5m])",
+          "legendFormat": "messages/sec"
+        },
+        {
+          "expr": "idx_messages_sent_total",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "title": "Fetch Errors",
+      "type": "graph",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {
+          "expr": "rate(idx_fetch_errors_total[5m])",
+          "legendFormat": "errors/sec"
+        }
+      ]
+    },
+    {
+      "title": "Batch Messages",
+      "type": "singlestat",
+      "gridPos": {"x": 0, "y": 6, "w": 4, "h": 4},
+      "targets": [{"expr": "idx_batch_messages"}],
+      "format": "none"
+    },
+    {
+      "title": "Kafka Connection",
+      "type": "singlestat",
+      "gridPos": {"x": 4, "y": 6, "w": 4, "h": 4},
+      "targets": [{"expr": "idx_kafka_connection_status"}],
+      "format": "none"
+    },
+    {
+      "title": "Fetch Duration (p99)",
+      "type": "singlestat",
+      "gridPos": {"x": 8, "y": 6, "w": 4, "h": 4},
+      "targets": [{"expr": "histogram_quantile(0.99, rate(idx_fetch_duration_seconds_bucket[5m]))"}],
+      "format": "s"
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1
+}

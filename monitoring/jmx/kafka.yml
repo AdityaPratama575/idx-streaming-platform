@@ -1,0 +1,22 @@
+---
+jmxUrl: service:jmx:rmi:///jndi/rmi://kafka:9999/jmxrmi
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  - pattern: kafka.server<type=BrokerTopicMetrics, name=(BytesInPerSec|BytesOutPerSec)
+    name: kafka_broker_$1
+    type: GAUGE
+  - pattern: kafka.server<type=BrokerTopicMetrics, name=(MessagesInPerSec)
+    name: kafka_broker_$1
+    type: GAUGE
+  - pattern: kafka.server<type=ReplicaManager, name=(UnderReplicatedPartitions)
+    name: kafka_$1
+    type: GAUGE
+  - pattern: kafka.consumer<type=ConsumerFetchManager, name=(RecordsLagMax)
+    name: kafka_consumer_$1
+    type: GAUGE
+  - pattern: kafka.server<type=KafkaRequestHandlerPool, name=(RequestHandlerAvgIdlePercent)
+    name: kafka_$1
+    type: GAUGE
+  - pattern: java.lang<type=Memory>
+  - pattern: java.lang<type=OperatingSystem>

@@ -2,10 +2,22 @@ scrape_configs:
   - job_name: "producer"
     static_configs:
       - targets: ["idx-producer:8000"]
-  - job_name: "spark"
+
+  - job_name: "spark-driver"
+    metrics_path: "/metrics/prometheus"
+    static_configs:
+      - targets: ["idx-spark-processor:4040"]
+
+  - job_name: "spark-master"
     metrics_path: "/metrics/prometheus"
     static_configs:
       - targets: ["idx-spark-master:8080"]
-  - job_name: "kafka"
+
+  - job_name: "spark-worker"
+    metrics_path: "/metrics/prometheus"
     static_configs:
-      - targets: ["idx-kafka:9092"]
+      - targets: ["idx-spark-worker:8081"]
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["idx-cadvisor:9096"]

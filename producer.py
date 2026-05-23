@@ -3,6 +3,9 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta, timezone
+from threading import Thread
+
+from prometheus_client import start_http_server, Counter, Gauge, Histogram
 
 import pandas as pd
 import yfinance as yf
@@ -26,6 +29,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 WIB = timezone(timedelta(hours=7))
+
+# ── Prometheus Metrics ──
+messages_sent = Counter("idx_messages_sent_total", "Total messages sent to Kafka", ["ticker"])
+fetch_errors = Counter("idx_fetch_errors_total", "Total yfinance fetch errors")
+batch_messages = Gauge("idx_batch_messages", "Messages in last batch")
+fetch_duration = Histogram("idx_fetch_duration_seconds", "Duration of one fetch cycle", buckets=[1, 5, 10, 30, 60, 120, 300])
+tickers_succeeded = Gauge("idx_tickers_succeeded", "Tickers succeeded in last batch")
+tickers_failed = Gauge("idx_tickers_failed", "Tickers failed in last batch")
+kafka_connected = Gauge("idx_kafka_connection_status", "Kafka connection status (0=disconnected, 1=connected)")
+
+
+def start_metrics_server():
+    start_http_server(8000)
+    logger.info("Metrics HTTP server started on port 8000")
 _market_open = 9 * 60
 _market_close = 15 * 60
 
@@ -89,6 +106,7 @@ def build_payload(ticker, sector, row):
 def fetch_and_publish(producer):
     max_retries = 3
     total_sent = 0
+    total_failed = 0
     for sector, tickers in top5_saham_ihsg_by_sector_market_cap.items():
         for ticker in tickers:
             for attempt in range(max_retries):
@@ -96,7 +114,7 @@ def fetch_and_publish(producer):
                     data = yf.Ticker(ticker).history(period="1d", interval="1m")
 
                     if data.empty:
-                        logger.warning("No data for %s (%s) — skipping", ticker, sector)
+                        logger.warning("No data for %s (%s) \u2014 skipping", ticker, sector)
                         break
 
                     sent = 0
@@ -124,6 +142,7 @@ def fetch_and_publish(producer):
                     if sent > 0:
                         _latest_ts_per_ticker[ticker] = latest
                         total_sent += sent
+                        messages_sent.labels(ticker=ticker).inc(sent)
                         logger.info("%s (%s): sent=%d skipped=%d", ticker, sector, sent, skipped)
                     else:
                         logger.info("%s (%s): no new candles (skipped=%d)", ticker, sector, skipped)
@@ -136,21 +155,29 @@ def fetch_and_publish(producer):
                         time.sleep(wait)
                     else:
                         logger.warning("Failed to fetch %s (%s) after %d retries: %s", ticker, sector, max_retries, e)
+                        fetch_errors.inc()
+                        total_failed += 1
 
             time.sleep(YFINANCE_DELAY_SECONDS)
 
         producer.flush()
 
+    batch_messages.set(total_sent)
+    tickers_succeeded.set(len(_latest_ts_per_ticker))
+    tickers_failed.set(total_failed)
     logger.info("Batch complete: %d new messages sent across %d tickers with data", total_sent, len(_latest_ts_per_ticker))
 
 
 def main():
     logger.info("Starting IDX Producer...")
     producer = init_kafka_producer()
+    kafka_connected.set(1)
+    start_metrics_server()
 
     while True:
         try:
-            fetch_and_publish(producer)
+            with fetch_duration.time():
+                fetch_and_publish(producer)
             interval = _get_sleep_interval()
             status = "market hours" if _is_market_open() else "off-hours"
             logger.info("Sleeping %d seconds before next fetch cycle (%s)...", interval, status)
@@ -159,7 +186,6 @@ def main():
             logger.error("Producer error: %s. Reconnecting...", e)
             time.sleep(5)
             producer = init_kafka_producer()
-
 
 if __name__ == "__main__":
     main()

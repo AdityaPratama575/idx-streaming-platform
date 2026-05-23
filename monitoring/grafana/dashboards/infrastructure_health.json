@@ -1,0 +1,34 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "Infrastructure Health",
+  "uid": "infra-health",
+  "panels": [
+    {
+      "title": "Container CPU Usage",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "rate(container_cpu_usage_seconds_total[1m])", "legendFormat": "{{container_label_container_name}}"}
+      ]
+    },
+    {
+      "title": "Container Memory Usage",
+      "type": "graph",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "container_memory_usage_bytes", "legendFormat": "{{container_label_container_name}}"}
+      ]
+    },
+    {
+      "title": "Spark Batch Duration",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 6},
+      "targets": [
+        {"expr": "rate(spark_streaming_batch_duration[1m])", "legendFormat": "ms"}
+      ]
+    }
+  ],
+  "schemaVersion": 27,
+  "version": 1
+}

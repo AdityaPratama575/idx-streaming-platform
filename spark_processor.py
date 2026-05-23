@@ -54,6 +54,10 @@ spark = (
     .config("spark.executorEnv.GOOGLE_APPLICATION_CREDENTIALS", abs_cred_path)
     .config("spark.hadoop.fs.gs.auth.service.account.enable", "true")
     .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", abs_cred_path)
+    .config("spark.ui.prometheus.enabled", "true")
+    .config("spark.metrics.conf.*.sink.prometheus.class", "org.apache.spark.metrics.sink.PrometheusServlet")
+    .config("spark.metrics.conf.*.sink.prometheus.path", "/metrics/prometheus")
+    .config("spark.sql.streaming.metricsEnabled", "true")
     .getOrCreate()
 )
 
