@@ -45,4 +45,5 @@ spark-checkpoints/
 
 # === OS Specifics ===
 .DS_Store
-Thumbs.db
+Thumbs.dbdbt/profiles.yml
+*.json:Zone.Identifier
