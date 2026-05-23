@@ -84,6 +84,8 @@ services:
     restart: on-failure
     mem_limit: 1g
     cpus: 0.5
+    volumes:
+      - ./monitoring/spark-metrics.properties:/opt/spark/conf/metrics.properties
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 10s
@@ -109,6 +111,7 @@ services:
     cpus: 1.0
     volumes:
       - ./gcp-service-account.json:/app/gcp-service-account.json:ro
+      - ./monitoring/spark-metrics.properties:/opt/spark/conf/metrics.properties
     depends_on:
       spark-master:
         condition: service_healthy
@@ -151,7 +154,7 @@ services:
     volumes:
       # Bind mount service account agar path GOOGLE_APPLICATION_CREDENTIALS bisa diakses
       - ./gcp-service-account.json:/app/gcp-service-account.json:ro
-      # Named volume untuk checkpoint Spark — state streaming tetap bertahan walau container restart
+      - ./monitoring/spark-metrics.properties:/opt/spark/conf/metrics.properties
       - spark_checkpoints:/tmp/spark-checkpoints
     depends_on:
       kafka:

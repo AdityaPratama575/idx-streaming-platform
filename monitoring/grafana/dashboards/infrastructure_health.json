@@ -5,28 +5,19 @@
   "uid": "infra-health",
   "panels": [
     {
-      "title": "Container CPU Usage",
-      "type": "graph",
-      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "title": "Ticker Activity",
+      "type": "table",
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
       "targets": [
-        {"expr": "rate(container_cpu_usage_seconds_total[1m])", "legendFormat": "{{container_label_container_name}}"}
+        {"expr": "idx_messages_sent_total", "legendFormat": "{{ticker}}"}
       ]
     },
     {
-      "title": "Container Memory Usage",
-      "type": "graph",
-      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
-      "targets": [
-        {"expr": "container_memory_usage_bytes", "legendFormat": "{{container_label_container_name}}"}
-      ]
-    },
-    {
-      "title": "Spark Batch Duration",
-      "type": "graph",
-      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 6},
-      "targets": [
-        {"expr": "rate(spark_streaming_batch_duration[1m])", "legendFormat": "ms"}
-      ]
+      "title": "System Status",
+      "type": "text",
+      "gridPos": {"x": 0, "y": 8, "w": 24, "h": 4},
+      "content": "## Pipeline Status\n\nProducer metrics available at http://localhost:8000/metrics\n\nPrometheus: http://localhost:9090\n\nGrafana: http://localhost:3000",
+      "mode": "markdown"
     }
   ],
   "schemaVersion": 27,

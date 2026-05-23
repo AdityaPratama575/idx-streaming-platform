@@ -5,51 +5,46 @@
   "uid": "pipeline-overview",
   "panels": [
     {
-      "title": "Messages Sent to Kafka",
+      "title": "Messages Sent Total",
       "type": "graph",
       "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
       "targets": [
-        {
-          "expr": "rate(idx_messages_sent_total[5m])",
-          "legendFormat": "messages/sec"
-        },
-        {
-          "expr": "idx_messages_sent_total",
-          "legendFormat": "total"
-        }
+        {"expr": "idx_messages_sent_total", "legendFormat": "total"}
       ]
     },
     {
-      "title": "Fetch Errors",
+      "title": "Messages Per Second",
       "type": "graph",
       "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
       "targets": [
-        {
-          "expr": "rate(idx_fetch_errors_total[5m])",
-          "legendFormat": "errors/sec"
-        }
+        {"expr": "rate(idx_messages_sent_total[1m])", "legendFormat": "rate"}
       ]
     },
     {
-      "title": "Batch Messages",
+      "title": "Last Batch Messages",
       "type": "singlestat",
       "gridPos": {"x": 0, "y": 6, "w": 4, "h": 4},
-      "targets": [{"expr": "idx_batch_messages"}],
-      "format": "none"
+      "targets": [{"expr": "idx_batch_messages"}]
     },
     {
-      "title": "Kafka Connection",
+      "title": "Tickers Succeeded",
       "type": "singlestat",
       "gridPos": {"x": 4, "y": 6, "w": 4, "h": 4},
-      "targets": [{"expr": "idx_kafka_connection_status"}],
-      "format": "none"
+      "targets": [{"expr": "idx_tickers_succeeded"}]
     },
     {
-      "title": "Fetch Duration (p99)",
+      "title": "Fetch Errors Total",
       "type": "singlestat",
       "gridPos": {"x": 8, "y": 6, "w": 4, "h": 4},
-      "targets": [{"expr": "histogram_quantile(0.99, rate(idx_fetch_duration_seconds_bucket[5m]))"}],
-      "format": "s"
+      "targets": [{"expr": "idx_fetch_errors_total"}]
+    },
+    {
+      "title": "Messages by Ticker",
+      "type": "table",
+      "gridPos": {"x": 0, "y": 10, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "idx_messages_sent_total", "legendFormat": "{{ticker}}"}
+      ]
     }
   ],
   "schemaVersion": 27,

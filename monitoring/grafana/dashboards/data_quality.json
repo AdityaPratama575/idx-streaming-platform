@@ -5,34 +5,28 @@
   "uid": "data-quality",
   "panels": [
     {
-      "title": "Ticker Coverage",
+      "title": "Tickers Coverage",
       "type": "singlestat",
       "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
-      "targets": [{"expr": "idx_tickers_succeeded"}],
-      "format": "none"
+      "targets": [{"expr": "idx_tickers_succeeded"}]
     },
     {
       "title": "Failed Tickers",
       "type": "singlestat",
       "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
-      "targets": [{"expr": "idx_tickers_failed"}],
-      "format": "none"
+      "targets": [{"expr": "idx_tickers_failed"}]
     },
     {
-      "title": "Kafka Bytes In",
-      "type": "graph",
-      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
-      "targets": [
-        {"expr": "rate(kafka_broker_BytesInPerSec[5m])", "legendFormat": "bytes in"},
-        {"expr": "rate(kafka_broker_BytesOutPerSec[5m])", "legendFormat": "bytes out"}
-      ]
-    },
-    {
-      "title": "Under Replicated Partitions",
+      "title": "Kafka Connection",
       "type": "singlestat",
-      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 3},
-      "targets": [{"expr": "kafka_UnderReplicatedPartitions"}],
-      "format": "none"
+      "gridPos": {"x": 0, "y": 4, "w": 6, "h": 4},
+      "targets": [{"expr": "idx_kafka_connection_status"}]
+    },
+    {
+      "title": "Fetch Duration (last batch)",
+      "type": "singlestat",
+      "gridPos": {"x": 6, "y": 4, "w": 6, "h": 4},
+      "targets": [{"expr": "idx_fetch_duration_seconds_sum"}]
     }
   ],
   "schemaVersion": 27,
