@@ -79,7 +79,6 @@ raw_df = (
 # Mode PERMISSIVE: field tidak dikenal → NULL (forward compatibility)
 raw_with_str = raw_df.selectExpr(
     "CAST(value AS STRING) as json_str",
-    "headers",
     "topic",
     "partition",
     "offset",
