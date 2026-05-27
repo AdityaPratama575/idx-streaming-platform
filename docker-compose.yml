@@ -180,9 +180,12 @@ services:
     ports:
       - "8082:8080"
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__MIN_SERIALIZED_DAG_UPDATE_INTERVAL: 300
+      AIRFLOW__SCHEDULER__SCHEDULER_HEARTBEAT_SEC: 60
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 300
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
       _AIRFLOW_DB_UPGRADE: "true"
       _AIRFLOW_WWW_USER_CREATE: "true"
@@ -193,8 +196,8 @@ services:
       - airflow_data:/opt/airflow
     command: standalone
     restart: on-failure
-    mem_limit: 2g
-    cpus: 1.0
+    mem_limit: 1g
+    cpus: 0.5
 
   # ==============================================
   # Prometheus — Metrics Collection (Issue #13)

@@ -58,6 +58,10 @@ spark = (
     .config("spark.metrics.conf.*.sink.prometheus.class", "org.apache.spark.metrics.sink.PrometheusServlet")
     .config("spark.metrics.conf.*.sink.prometheus.path", "/metrics/prometheus")
     .config("spark.sql.streaming.metricsEnabled", "true")
+    .config("spark.sql.shuffle.partitions", "20")
+    .config("spark.sql.adaptive.maxNumPostShufflePartitions", "20")
+    .config("spark.sql.adaptive.coalescePartitions.parallelismFirst", "false")
+    .config("spark.default.parallelism", "2")
     .getOrCreate()
 )
 

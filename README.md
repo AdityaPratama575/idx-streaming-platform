@@ -2,7 +2,7 @@
 
 **IDX-Stream** adalah pipeline real-time hybrid untuk memonitor Top 5 saham dari setiap sektor bisnis di Bursa Efek Indonesia (IDX). Data diambil dari Yahoo Finance (`yfinance`), dialirkan melalui Kafka dan Spark di lokal, lalu disimpan ke Google BigQuery untuk analisis lanjutan menggunakan dbt.
 
-**Stack:** Python · yfinance · Apache Kafka (KRaft) · Apache Spark 3.4 · Google BigQuery · dbt · Docker · Terraform
+**Stack:** Python · yfinance · Apache Kafka (KRaft) · Apache Spark 3.4 · Google BigQuery · dbt · Docker · Terraform · Airflow · Prometheus · Grafana
 
 ## Architecture
 
@@ -55,6 +55,7 @@ docker compose up --build
 | http://localhost:8082 | Airflow Webserver (admin/admin) |
 | http://localhost:3000 | Grafana Dashboard (admin/admin) |
 | http://localhost:9090 | Prometheus UI |
+| http://localhost:8000/metrics | Producer Prometheus metrics |
 | `docker logs -f idx-producer` | Log producer real-time |
 | `docker logs -f idx-spark-processor` | Log Spark streaming |
 | `docker exec idx-kafka kafka-topics --bootstrap-server localhost:29092 --list` | Daftar Kafka topics |
