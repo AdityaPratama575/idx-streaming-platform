@@ -2,7 +2,7 @@
 
 **IDX-Stream** adalah pipeline real-time hybrid untuk memonitor Top 5 saham dari setiap sektor bisnis di Bursa Efek Indonesia (IDX). Data diambil dari Yahoo Finance (`yfinance`), dialirkan melalui Kafka dan Spark di lokal, lalu disimpan ke Google BigQuery untuk analisis lanjutan menggunakan dbt.
 
-**Stack:** Python · yfinance · Apache Kafka (KRaft) · Apache Spark 3.4 · Google BigQuery · dbt · Docker · Terraform · Airflow · Prometheus · Grafana
+**Stack:** Python · yfinance · Apache Kafka (KRaft) · Apache Spark 3.4 · Google BigQuery · dbt (Cloud) · Docker · Terraform · Prometheus · Grafana
 
 ## Architecture
 
@@ -51,7 +51,7 @@ docker compose up --build
 |---|---|
 | http://localhost:8080 | Spark Master UI |
 | http://localhost:8081 | Spark Worker UI |
-| http://localhost:8082 | Airflow Webserver (admin/admin) |
+| ~~http://localhost:8082~~ | ~~Airflow Webserver~~ (disabled, digantikan dbt Cloud) |
 | http://localhost:3000 | Grafana Dashboard (admin/admin) |
 | http://localhost:9090 | Prometheus UI |
 | http://localhost:8000/metrics | Producer Prometheus metrics |
@@ -107,9 +107,9 @@ idx-streaming-platform/
 │   ├── dq_check_results_ddl.sql  # DQ table DDL
 │   └── dq_checks.sql             # OHLCV, stale data, null checks
 │
-├── airflow/dags/                 # Issue #15 — Airflow Orchestration
-│   ├── idx_pipeline_daily.py     # Daily batch pipeline DAG
-│   └── idx_streaming_monitor.py  # Health check DAG (10 menit)
+├── airflow/dags/                 # Issue #15 — Airflow Orchestration (opsional, 
+│   ├── idx_pipeline_daily.py     #   digantikan dbt Cloud)
+│   └── idx_streaming_monitor.py  #
 │
 ├── monitoring/                   # Issue #13 — Observability
 │   ├── prometheus.yml            # Scrape config
@@ -176,7 +176,8 @@ Partitioned by `timestamp` (DAY), clustered by `ticker`, `sector`.
 - **Spark job stuck / data tidak masuk ke BQ:** Hapus checkpoint: `docker volume rm spark_checkpoints` lalu `docker compose up --build -d spark-processor`.
 - **Producer skip semua candle:** Normal — dedup aktif. Tunggu candle baru dari yfinance (biasanya delay 5-30 menit).
 - **Running tests:** `pip install -r requirements-test.txt && python3 -m pytest tests/ -v`.
-- **dbt:** `cd dbt && dbt deps && dbt run --profiles-dir .`.
+- **dbt Cloud:** Dashboard di https://cloud.getdbt.com — job "Daily Refresh" jalan otomatis setiap hari kerja pukul 08:00 WIB.
+- **dbt lokal:** `cd dbt && dbt deps && dbt run --profiles-dir .` (butuh Python 3.11+).
 
 ## Shutdown
 

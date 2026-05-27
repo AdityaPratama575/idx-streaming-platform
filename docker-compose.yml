@@ -16,8 +16,8 @@ volumes:
     name: prometheus_data
   grafana_data:
     name: grafana_data
-  airflow_data:
-    name: airflow_data
+  # airflow_data:
+  #   name: airflow_data
 
 services:
 
@@ -171,33 +171,32 @@ services:
 
   # ==============================================
   # Airflow — Orchestrator (Issue #15)
+  # Disabled — digantikan oleh dbt Cloud
+  # Uncomment untuk aktifkan:
   # ==============================================
-  airflow:
-    image: apache/airflow:2.10.0
-    container_name: idx-airflow
-    networks:
-      - idx-network
-    ports:
-      - "8082:8080"
-    environment:
-      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-      AIRFLOW__CORE__MIN_SERIALIZED_DAG_UPDATE_INTERVAL: 300
-      AIRFLOW__SCHEDULER__SCHEDULER_HEARTBEAT_SEC: 60
-      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 300
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-      _AIRFLOW_DB_UPGRADE: "true"
-      _AIRFLOW_WWW_USER_CREATE: "true"
-      _AIRFLOW_WWW_USER_USERNAME: admin
-      _AIRFLOW_WWW_USER_PASSWORD: admin
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - airflow_data:/opt/airflow
-    command: standalone
-    restart: on-failure
-    mem_limit: 1g
-    cpus: 0.5
+  # airflow:
+  #   image: apache/airflow:2.10.0
+  #   container_name: idx-airflow
+  #   networks:
+  #     - idx-network
+  #   ports:
+  #     - "8082:8080"
+  #   environment:
+  #     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  #     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  #     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  #     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+  #     _AIRFLOW_DB_UPGRADE: "true"
+  #     _AIRFLOW_WWW_USER_CREATE: "true"
+  #     _AIRFLOW_WWW_USER_USERNAME: admin
+  #     _AIRFLOW_WWW_USER_PASSWORD: admin
+  #   volumes:
+  #     - ./airflow/dags:/opt/airflow/dags
+  #     - airflow_data:/opt/airflow
+  #   command: webserver
+  #   restart: on-failure
+  #   mem_limit: 1g
+  #   cpus: 0.5
 
   # ==============================================
   # Prometheus — Metrics Collection (Issue #13)

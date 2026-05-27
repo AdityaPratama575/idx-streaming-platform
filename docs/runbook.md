@@ -413,30 +413,22 @@ docker compose up -d prometheus grafana
 
 ---
 
-## 10. Airflow Orchestration
+## 10. Orchestration — dbt Cloud
 
-### 10.1 Start Airflow
+> **Catatan:** Orchestration pipeline menggunakan **dbt Cloud**, bukan Airflow. 
+> Airflow tetap tersedia di kode (`airflow/dags/`) sebagai opsi alternatif.
 
-Tambahkan ke `docker-compose.yml`:
+### 10.1 dbt Cloud Setup
 
-```yaml
-airflow:
-  image: bitnami/airflow:2.9.0
-  container_name: idx-airflow
-  ports:
-    - "8082:8080"
-  volumes:
-    - ./airflow/dags:/opt/bitnami/airflow/dags
-```
+1. Daftar di https://cloud.getdbt.com (free tier)
+2. Hubungkan GitHub repo `AdityaPratama575/idx-streaming-platform`
+3. Setup BigQuery connection dengan `gcp-service-account.json`
+4. Environment: Production → dataset `idx_stock_data`
+5. Job: "Daily Refresh" → command `dbt build` → schedule Mon-Fri 00:00 UTC
 
-```bash
-docker compose up -d airflow
-```
+### 10.2 Trigger Manual
 
-### 10.2 Trigger DAG
-
-Manual trigger via UI: http://localhost:8082
-Login: admin / admin → DAGs → idx_pipeline_daily → Trigger DAG
+https://cloud.getdbt.com → Deploy → Jobs → Daily Refresh → Run Now
 
 ---
 
