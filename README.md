@@ -7,7 +7,7 @@
 ## Architecture
 
 ```
-                                 Producer Dedup + Off-Hours Scheduling
+                                  Producer Dedup + Off-Hours Scheduling
 [Yahoo Finance] ──(51 ticker)──▶ [idx-producer] ───JSON──▶ [Kafka Broker]
                                                               │ 29092
                                                      ┌────────┴────────┐
@@ -16,23 +16,22 @@
                                                      │
                                           Watermark + Dedup + DQ
                                                      │
-                                          Parquet → GCS Temp Staging
+                                      Direct Write (BigQuery Storage API)
                                                      │
-                                               BigQuery LOAD Job
+                                               BigQuery LOAD
                                                      ▼
                                           [BigQuery: top_sector_ticks]
                                                      │
                                                dbt Transformation
                                                      ▼
                               [marts: top5, sector_perf, market_breadth]
-```
+
 
 ## Prerequisites
 
 - Docker & Docker Compose (versi 3.8+)
 - Google Cloud Platform account dengan BigQuery API enabled
 - Service Account JSON key dengan akses **BigQuery Data Editor** + **Storage Object Admin**
-- GCS Bucket untuk temporary staging BigQuery
 - (Optional) Python 3.9+ untuk lokal testing
 
 ## Quick Start
@@ -133,7 +132,7 @@ idx-streaming-platform/
 | `GOOGLE_APPLICATION_CREDENTIALS` | Path ke service account JSON | `./gcp-service-account.json` |
 | `GCP_BIGQUERY_DATASET` | Nama dataset BigQuery | `idx_stock_data` |
 | `GCP_BIGQUERY_TABLE` | Nama table BigQuery | `top_sector_ticks` |
-| `GCS_TEMP_BUCKET` | Bucket GCS untuk staging | `idx-temp-staging` |
+| `GCS_TEMP_BUCKET` | Bucket GCS (optional, dipakai jika `writeMethod=indirect`) | `idx-temp-staging` |
 | `KAFKA_BOOTSTRAP_SERVERS` | Alamat broker Kafka | `kafka:29092` |
 | `KAFKA_TOPIC` | Kafka topic name | `idx_sector_ticks` |
 | `SPARK_APP_NAME` | Nama aplikasi Spark | `RealTimeIDXProcessor` |

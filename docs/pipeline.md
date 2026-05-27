@@ -16,9 +16,9 @@
                                           └──────────────────┘            │       │
                                                                          ▼       │
                                                                     ┌──────────┐  │
-                                                                    │   GCS    │  │
-                                                                    │  Temp    │  │
-                                                                    │  Staging │  │
+                                                                    │ BigQuery│  │
+                                                                    │ Storage  │  │
+                                                                    │ Write API│  │
                                                                     └────┬─────┘  │
                                                                          │       │
                               ┌──────────────────────────────────────────┘       │
@@ -158,7 +158,7 @@ sector_daily     performance      breadth           anomalies
 4. **Spark processor** baca stream dari Kafka
 5. Parse JSON → split valid vs invalid
 6. Data valid: NaN → NULL, filter null ticker, parse timestamp, dedup (watermark 30m)
-7. Data valid → write ke BigQuery via GCS temp staging
+7. Data valid → direct write ke BigQuery via Storage Write API
 8. Data invalid → write ke Kafka DLQ topic
 9. **dbt** transformasi data staging → intermediate → marts
 
@@ -178,7 +178,7 @@ sector_daily     performance      breadth           anomalies
 | `GOOGLE_APPLICATION_CREDENTIALS` | `./gcp-service-account.json` | ✅ | Path SA JSON |
 | `GCP_BIGQUERY_DATASET` | — | ✅ | Nama dataset BigQuery |
 | `GCP_BIGQUERY_TABLE` | — | ✅ | Nama table BigQuery |
-| `GCS_TEMP_BUCKET` | — | ✅ | Bucket GCS untuk staging |
+| `GCS_TEMP_BUCKET` | — | ✅ | Bucket GCS (optional, untuk indirect write method) |
 | `KAFKA_BOOTSTRAP_SERVERS` | `kafka:29092` | ✅ | Alamat Kafka broker |
 | `KAFKA_TOPIC` | `idx_sector_ticks` | ✅ | Kafka topic name |
 | `SPARK_APP_NAME` | `RealTimeIDXProcessor` | — | Nama Spark app |

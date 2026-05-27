@@ -190,6 +190,8 @@ docker compose restart producer
 
 ### 5.2 Spark Error: GCS Permission
 
+> **Catatan:** Pipeline menggunakan `direct` write method (BigQuery Storage API), jadi GCS bucket tidak diperlukan untuk write data. Error ini hanya muncul jika `writeMethod` diubah ke `indirect`.
+
 Error: `403 Forbidden` atau `Connection refused`
 
 **Penyebab:** Service account tidak punya akses ke GCS bucket.
