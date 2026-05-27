@@ -424,7 +424,7 @@ docker compose up -d prometheus grafana
 2. Hubungkan GitHub repo `AdityaPratama575/idx-streaming-platform`
 3. Setup BigQuery connection dengan `gcp-service-account.json`
 4. Environment: Production → dataset `idx_stock_data`
-5. Job: "Daily Refresh" → command `dbt build` → schedule Mon-Fri 00:00 UTC
+5. Job: "Daily Refresh" → command `dbt build` → schedule Mon-Fri 09:00 UTC (16:00 WIB)
 
 ### 10.2 Trigger Manual
 
