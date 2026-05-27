@@ -176,7 +176,7 @@ Partitioned by `timestamp` (DAY), clustered by `ticker`, `sector`.
 - **Spark job stuck / data tidak masuk ke BQ:** Hapus checkpoint: `docker volume rm spark_checkpoints` lalu `docker compose up --build -d spark-processor`.
 - **Producer skip semua candle:** Normal — dedup aktif. Tunggu candle baru dari yfinance (biasanya delay 5-30 menit).
 - **Running tests:** `pip install -r requirements-test.txt && python3 -m pytest tests/ -v`.
-- **dbt Cloud:** Dashboard di https://cloud.getdbt.com — job "Daily Refresh" jalan otomatis setiap hari kerja pukul 08:00 WIB.
+- **dbt Cloud:** Dashboard di https://cloud.getdbt.com — job "Daily Refresh" jalan otomatis setiap hari kerja pukul 16:00 WIB (setelah market close).
 - **dbt lokal:** `cd dbt && dbt deps && dbt run --profiles-dir .` (butuh Python 3.11+).
 
 ## Shutdown
